@@ -3,7 +3,7 @@ sys.path.insert(0, 'include')
 import shift
 import time
 
-# Loading the tickers
+# Loading the tickers from Dow Jones
 file = open("DowJonesTickers.pickle",'rb')
 tickers = pickle.load(file)
 print(tickers)
@@ -66,4 +66,3 @@ while True:
     time.sleep(interval)
     elapsed_time = elapsed_time + interval
     time_counter1 = time_counter1 + interval
->>>>>>> 0a038bda564a8337a51d52ae5b741f7df1b25900
