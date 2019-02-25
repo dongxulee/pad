@@ -3,7 +3,7 @@ sys.path.insert(0, 'include')
 import shift
 import time
 
-# Loading the tickers from Dow Jones
+# Loading the tickers from Dow Jones,
 file = open("DowJonesTickers.pickle",'rb')
 tickers = pickle.load(file)
 print(tickers)
