@@ -2,10 +2,10 @@ import sys
 sys.path.insert(0, 'include')
 import shift
 import time
-import pandas as pd
+from stockAndPortfolio import Stock, Portfolio
 
 # Setup trader for accumulating information
-client_id_number = 7  # client ID number
+client_id_number = 6  # client ID number
 verbose = 1
 client_id = f"test{str(client_id_number).zfill(3)}"
 trader = shift.Trader(client_id)
@@ -29,28 +29,25 @@ simulation_duration = 380
 # companies in Dow
 tickers = trader.getStockList()
 
-class Stock:
-    def __init__(self, name):
-        self.name = name
-        self.histData = pd.DataFrame()
 
-    def upDate(self, info):
-        pass
-
-    def showData(self, info):
-        pass
-
-
-class Portfolio:
-    def 
-# info diction for every ticker, can
-infoList = dict()
-for ticker in tickers:
-    infoList[ticker] = Stock(ticker)
+# # info diction for every ticker, can
+# infoList = dict()
+# for ticker in tickers:
+#     infoList[ticker] = Stock(ticker)
 
 for i in range(1, simulation_duration):
-    time.sleep(10)
+    time.sleep(5)
+    print(i)
     if verbose:
         print()
         print(f"Trading Time: {i}")
     for ticker in tickers:
+        bp = trader.getBestPrice(ticker)
+        print("Get the best bid price: \n")
+        print(bp.getBidPrice())
+        print("Get the best bid size: \n")
+        print(bp.getBidSize())
+        print("Get the best ask price: \n")
+        print(bp.getAskPrice())
+        print("Get the best ask size: \n")
+        print(bp.getAskSize())
