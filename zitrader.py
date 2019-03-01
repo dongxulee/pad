@@ -37,7 +37,7 @@ def main(argv):
     initial_bid_price = 99.95  # initial bid price
     initial_ask_price = 100.05  # initial ask price
     minimum_dollar_change = 0.05  # minimum dollar change (e.g. 0.01)
-    verbose = False  # verbose mode
+    verbose = True  # verbose mode
 
     try:
         opts, args = getopt.getopt(argv, "hn:t:d:r:b:a:c:v",
@@ -109,6 +109,7 @@ def main(argv):
     trader.onPortfolioSummaryUpdated(goodcbfs.PortfolioSummaryUpdatedCB(verbose))
     trader.onPortfolioItemUpdated(goodcbfs.PortfolioItemUpdatedCB(stock_ticker, verbose))
     trader.onWaitingListUpdated(goodcbfs.WaitingListUpdatedCB(verbose))
+
 
     # connect
     try:

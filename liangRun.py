@@ -1,14 +1,5 @@
 import sys
 sys.path.insert(0, 'include')
-import shift
-import time
-
-
-# Loading the tickers from Dow Jones
-
-file = open("DowJonesTickers.pickle",'rb')
-tickers = pickle.load(file)
-print(tickers)
 
 import numpy as np
 import pandas as pd
