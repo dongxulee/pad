@@ -1,217 +1,125 @@
-import sys
-sys.path.insert(0, 'include')
-import getopt
-import math
-import numpy
+import time
+import pandas as pd
 import shift
 import sys
-import time
+import numpy as np
+sys.path.insert(0, 'include')
+# if time%60==0
 
-import goodcbfs
+aapl = pd.DataFrame([['aapl', 198], ['aapl', 209],
+                     ['aapl', 207], ['aapl', 210],
+                     ['aapl', 208], ['aapl', 211],
+                     ['aapl', 212], ['aapl', 216]], columns=['Name', 'Last'])
+amzn = pd.DataFrame([['amzn', 2032], ['amzn', 2314],
+                     ['amzn', 2024], ['amzn', 2335],
+                     ['amzn', 2033], ['amzn', 2338],
+                     ['amzn', 2040], ['amzn', 2342]], columns=['Name', 'Last'])
+portfolio = {'AAPL': aapl, 'AMZN': amzn}
 
+Trader = shift.trader()
+tickers = Trader.getStockList()
 
-def usage():
-    print()
-    print("USAGE: zitrader.py [options] <args>")
-    print()
-    print("OPTIONS:")
-    print("-h [ --help ]            produce help message")
-    print("-n [ --number ] arg      client ID number")
-    print("-t [ --ticker ] arg      stock ticker (e.g. XYZ)")
-    print("-d [ --duration ] arg    duration of simulation (in minutes)")
-    print("-r [ --rate ] arg        number of trader per simulation session")
-    print("-b [ --bid ] arg         initial bid price")
-    print("-a [ --ask ] arg         initial ask price")
-    print("-c [ --change ] arg      minimum dollar change (e.g. 0.01)")
-    print("-v [ --verbose ]         verbose mode")
-    print()
-
-
-def decimal_truncate(value, precision) -> float:
-    return math.trunc(value * pow(10.0, precision)) / pow(10.0, precision)
-
-
-def main(argv):
-    client_id_number = 6  # client ID number
-    stock_ticker = tickers  # stock ticker (e.g. XYZ)
-    simulation_duration = 380  # duration of simulation (in minutes)
-    trading_rate = 190  # number of trader per simulation session
-    initial_bid_price = 99.95  # initial bid price
-    initial_ask_price = 100.05  # initial ask price
-    minimum_dollar_change = 0.05  # minimum dollar change (e.g. 0.01)
-    verbose = True  # verbose mode
-
-    try:
-        opts, args = getopt.getopt(argv, "hn:t:d:r:b:a:c:v",
-                                   ["help", "number=", "ticker=", "duration=", "rate=",
-                                    "bid=", "ask=", "change=", "verbose"])
-    except getopt.GetoptError as e:
-        # print help information and exit:
-        print()
-        print(e)  # will print something like "option -a not recognized"
-        usage()
-        sys.exit(2)
-    for o, a in opts:
-        if o in ("-h", "--help"):
-            usage()
-            sys.exit()
-        elif o in ("-n", "--number"):
-            client_id_number = int(a)
-        elif o in ("-t", "--ticker"):
-            stock_ticker = str(a)
-        elif o in ("-d", "--duration"):
-            simulation_duration = int(a)
-        elif o in ("-r", "--rate"):
-            trading_rate = int(a)
-        elif o in ("-b", "--bind"):
-            initial_bid_price = float(a)
-        elif o in ("-a", "--ask"):
-            initial_ask_price = float(a)
-        elif o in ("-c", "--change"):
-            minimum_dollar_change = float(a)
-        elif o in ("-v", "--verbose"):
-            verbose = True
+def check_signal_bid(faker, Tickers, alpha): #alpha is using as a thresold
+    delta = []
+    for i in Tickers:
+        bp = faker.getBestPrice(i)
+        new = bp.getBidSize()
+        sample_list = portfolio[i].BidSize
+        index = [j for j in range(len(sample_list)) if (j+1)%5==0]
+        data_ticker = []
+        for k in index:
+            data_ticker.append(sample_list[k])
+        n = len(data_ticker)
+        last = data_ticker[n-1]
+        if new > alpha * last:
+            delta.append((new - alpha * last)/(alpha * last))
         else:
-            assert False, "unhandled option"
+            delta.append(0)
+    return delta
 
-    client_id = f"test{str(client_id_number).zfill(3)}"
+def check_signal_ask(faker, Tickers, alpha):
+    delta = []
+    for i in Tickers:
+        bp = faker.getBestPrice(i)
+        new = bp.getAskSize()
+        sample_list = portfolio[i].BidSize
+        index = [j for j in range(len(sample_list)) if (j+1)%5==0]
+        data_ticker = []
+        for k in index:
+            data_ticker.append(sample_list[k])
+        n = len(data_ticker)
+        last = data_ticker[n-1]
+        if new > alpha * last:
+            delta.append((new - alpha * last)/(alpha * last))
+        else:
+            delta.append(0)
+    return delta
 
-    last_price = (initial_bid_price + initial_ask_price) / 2.0
-    best_bid = initial_bid_price
-    best_ask = initial_ask_price
-
-    confidence_level = int(numpy.random.randint(low=1, high=5))  # confidence level: 1, 2, 3, or 4
-    risk_appetite = int(numpy.random.randint(low=1, high=5))  # risk appetite: 1, 2, 3, or 4
-    if verbose:
-        print()
-        print(f"Confidence Level: {confidence_level}")
-        print(f"Risk Appetite: {risk_appetite}")
-        print()
-
-    num_trades = numpy.random.poisson(lam=trading_rate)
-    trading_times = set()
-
-    trading_times.add(0)
-    for i in range(num_trades):
-        trading_times.add(math.trunc(simulation_duration * 60 * float(numpy.random.uniform(low=0.0, high=1.0))))
-    trading_times.add(simulation_duration * 60)
-
-    # sort trading times
-    trading_times = list(trading_times)
-    trading_times.sort()
-
-    # update num_trades taking bend and end of simulation into consideration
-    num_trades = len(trading_times)
-
-    # create trader object
-    trader = shift.Trader(client_id)
-
-    # attach callback functors
-    # trader.onLastPriceUpdated(goodcbfs.LastPriceUpdatedCB(stock_ticker, verbose))
-    trader.onPortfolioSummaryUpdated(goodcbfs.PortfolioSummaryUpdatedCB(verbose))
-    trader.onPortfolioItemUpdated(goodcbfs.PortfolioItemUpdatedCB(stock_ticker, verbose))
-    trader.onWaitingListUpdated(goodcbfs.WaitingListUpdatedCB(verbose))
-
-    # connect
-    try:
-        trader.connect("initiator.cfg", "password")
-    except shift.IncorrectPassword as e:
-        print(e)
-        sys.exit(2)
-    except shift.ConnectionTimeout as e:
-        print(e)
-        sys.exit(2)
-
-    # subscribe to all available order books
-    trader.subAllOrderBook()
-
-    # trading strategy
-    for i in range(1, num_trades):  # trading_times[0] == 0
-        time.sleep(trading_times[i] - trading_times[i - 1])
-
-        if verbose:
-            print()
-            print(f"Trading Time: {trading_times[i]}")
-
-        # cancel last order if it has not executed yet
-        if trader.getWaitingListSize() != 0:
-            if verbose:
-                print("Canceling Pending Orders!")
-            # trader.cancelAllPendingOrders()
-            for order in trader.getWaitingList():
-                if order.type == shift.Order.LIMIT_BUY:
-                    order.type = shift.Order.CANCEL_BID
-                else:
-                    order.type = shift.Order.CANCEL_ASK
-                trader.submitOrder(order)
-            while trader.getWaitingListSize() > 0:
-                time.sleep(1)
-
-        # robot should not trade anymore
-        if i == (num_trades - 1):
-            break
-
-        target_rate = float(numpy.random.uniform(low=0.0, high=0.25 * confidence_level))
-        if verbose:
-            print(f"Target Rate: {target_rate}")
-
-        curr_last_price = trader.getLastPrice(stock_ticker)
-        last_price = last_price if curr_last_price == 0.0 else curr_last_price
-
-        if numpy.random.binomial(n=1, p=0.5) == 0:  # limit buy
-
-            curr_best_bid = trader.getBestPrice(stock_ticker).getBidPrice()
-            best_bid = best_bid if curr_best_bid == 0.0 else curr_best_bid
-
-            target_price = min(last_price, best_bid)
-            if verbose:
-                print(f"Last Price: {last_price:.2f}")
-                print(f"Best Bid: {best_bid:.2f}")
-                print(f"Target Price: {target_price:.2f}")
-
-            order_price = decimal_truncate(
-                target_price + minimum_dollar_change * float(numpy.random.normal(loc=0.0, scale=(0.5 * risk_appetite))),
-                2)
-            if verbose:
-                print(f"Bid Price: {order_price:.2f}")
-
-            order_size = math.floor((target_rate * trader.getPortfolioSummary().getTotalBP()) / (100 * order_price))
-            if verbose:
-                print(f"Bid Size: {order_size}")
-
-            limit_buy = shift.Order(shift.Order.LIMIT_BUY, stock_ticker, order_size, order_price)
-            trader.submitOrder(limit_buy)
-
-        else:  # limit sell
-
-            curr_best_ask = trader.getBestPrice(stock_ticker).getAskPrice()
-            best_ask = best_ask if curr_best_ask == 0.0 else curr_best_ask
-
-            target_price = max(last_price, best_ask)
-            if verbose:
-                print(f"Last Price: {last_price:.2f}")
-                print(f"Best ask: {best_ask:.2f}")
-                print(f"Target Price: {target_price:.2f}")
-
-            order_price = decimal_truncate(
-                target_price + minimum_dollar_change * float(numpy.random.normal(loc=0.0, scale=(0.5 * risk_appetite))),
-                2)
-            if verbose:
-                print(f"Ask Price: {order_price:.2f}")
-
-            order_size = math.floor(target_rate * (trader.getPortfolioItem(stock_ticker).getShares() / 100))
-            if verbose:
-                print(f"Ask Size: {order_size}")
-
-            limit_sell = shift.Order(shift.Order.LIMIT_SELL, stock_ticker, order_size, order_price)
-            trader.submitOrder(limit_sell)
-
-        if verbose:
-            print()
-
-    # disconnect
-    trader.disconnect()
+#reset the elements in the list from 0 to 1 according to their numbers.
+def rank(sample_list):
+    diff = 1/len(sample_list)
+    copy1 = sample_list.copy()
+    copy2 = sample_list.copy()
+    while(len(copy1)>0):
+        max_index = copy1.index(max(copy1))
+        copy2[max_index] = diff*len(copy1)
+        copy1.remove(copy1[max_index])
+    return copy2
 
 
-if __name__ == "__main__":
-    main(sys.argv[1:])
+def weight_adjusting(sample_list, trader):
+    last_price = [0]*len(tickers)
+    for i in range(len(tickers)):
+        bp = trader.getBestPrice(tickers[i])
+        last_price[i] = bp.getLastPrice(tickers[i])
+    last_price = rank(last_price).copy()
+    total = sum(sample_list)
+    weight = [i/total for i in sample_list]
+    for i in range(len(tickers)):
+        weight[i] = weight[i]*(last_price[i]) #use the price to measure the cap then use the cap to modify the weight
+    return weight
+
+
+delta_bid = check_signal_bid(Trader,tickers,2)
+delta_ask = check_signal_ask(Trader,tickers,2)
+weight_bid = weight_adjusting(delta_bid)
+weight_ask = weight_adjusting(delta_ask)
+
+
+def new_submit_buy(faker, weight_list , limit):
+    money = [0]*len(tickers)
+    buy_orders = [0]*len(tickers)
+    for i in len(range(money)):
+        money[i] = weight_list[i]*limit
+        bp = faker.getBestPrice(tickers[i])
+        order_price = bp.getBidPrice()
+        buy_orders[i] = np.floor(money[i]/order_price)
+        if money[i]!=0:
+            Marketbuy = shift.Order(shift.Order.MARKET_BUY, tickers[i], buy_orders[i]/100)
+            faker.submitOrder(Marketbuy)
+
+#if each time we check something weird about the ask size
+#we clean the position with the specified stock if the current position is greater than zero
+#if the current position is not greater than zero, we check whether our buying power is enough for doing the short position.
+def new_submit_sell(faker, weight_list,limit):
+    index = [j for j in range(len(tickers)) if weight_list[j]!=0]
+    money = [0]*len(tickers)
+    for i in len(range(money)):
+        money[i] = weight_list[i]*limit
+        bp = faker.getBestPrice(tickers[i])
+        order_price = bp.getAskSize()
+    for i in index:
+        item = faker.getPortfolioItem(tickers[i])
+        current_position = item.getShares()
+        if current_position > 0:
+            Marketsell = shift.Order(shift.Order.MARKET_SELL,tickers[i],current_position/100)
+            faker.submitOrder(Marketsell)
+# if current_position < 0:
+#     buying_power = faker.getPortfolioSummary().getTotalBp() #check the current buying power
+#     if money[i]>buying_power:
+#         sell_orders = np.floor(buying_power/order_price)
+#     elif money[i]<= buying_power:
+#         sell_orders = np.floor(money[i]/order_price)
+#     Marketsell = shift.Order(shift.Order.MARKET_SELL,tickers[i],sell_orders)
+#     faker.submitOrder(Marketsell)
+
