@@ -12,7 +12,7 @@ from pypfopt import discrete_allocation
 sys.path.insert(0, 'include')
 
 
-def efficient_frontier(trader, portfolio, assigned_value, target_risk):
+def efficient_frontier(trader, portfolio, assigned_value = 1000000 / 3, target_risk = 0.2):
     # Get data set from universe
     hist_price = pd.DataFrame()
     stock_list = trader.getStockList()
@@ -50,8 +50,9 @@ def efficient_frontier(trader, portfolio, assigned_value, target_risk):
     adjustment = {}
     for ticker in stock_list:
         portfolio_items[ticker] = 0
-    for item in trader.getPortfolioItems().values():
-        portfolio_items[item.getSymbol()] = item.getShares()
+    for ticker in stock_list:
+        item = trader.getPortfolioItems(ticker)
+        portfolio_items[ticker] = item.getShares()
     for ticker in stock_list:
         adjustment[ticker] = allocation[ticker] - portfolio_items[ticker]
 

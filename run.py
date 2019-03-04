@@ -49,6 +49,9 @@ Simulation Start
 
 for i in range(1, simulation_duration*60):
     time.sleep(1)
+    ####
+    if i > 60:
+        break
 
     '''
     ****************************************************************************
@@ -79,37 +82,43 @@ for i in range(1, simulation_duration*60):
     '''
     ****************************************************************************
     Angli's Algorithm
-    Only two major parameters are allowed here, for example:
+    Only three major parameters are allowed here, for example:
     >> from liangRun.py import algorithm
     >> if i%10*60 == 0:
-	>>     algorithm(trader, stockList)
+	>>     algorithm(tickers, trtrader, stockList)
     '''
 
 
     '''
     ****************************************************************************
     Weiping's Algorithm
-    Only two major parameters are allowed here, for example:
+    Only three major parameters are allowed here, for example:
     >> from liangRun.py import algorithm
     >> if i%10*60 == 0:
-	>>     algorithm(trader, stockList)
+	>>     algorithm(tickers, trader, stockList)
     '''
 
     '''
     ****************************************************************************
     Dongxu's Algorithm
-    Only two major parameters are allowed here, for example:
+    Only three major parameters are allowed here, for example:
     >> from liangRun.py import algorithm
     >> if i%10*60 == 0:
-	>>     algorithm(trader, stockList)
+	>>     algorithm(tickers, trader, stockList)
     '''
+    if i%5 == 0:
+        bp = trader.getBestPrice(ticker)
+        aapl_buy = shift.Order(shift.Order.LIMIT_BUY, "AAPL", 1, (bp.getBidPrice()+bp.getAskPrice())/2+0.0001)
+        aapl_sell = shift.Order(shift.Order.LIMIT_SELL, "AAPL", 1, (bp.getBidPrice()+bp.getAskPrice())/2)
+        trader.submitOrder(aapl_buy)
+        trader.submitOrder(aapl_sell)
 
     '''
     ****************************************************************************
     Portfolio summary every minute
     '''
     # this is the test function for information collection
-    if i % 60 == 0:
+    if i % 20 == 0:
         if verbose:
             print()
             print(f"Trading Time: {i // 60} min")
@@ -151,7 +160,14 @@ if trader.getWaitingListSize() != 0:
         time.sleep(1)
 
 
-
+portfolioSummary = trader.getPortfolioSummary()
+# This method returns the total buying power available in the account.
+print("total buying power: {}".format(portfolioSummary.getTotalBP()))
+# This method returns the total amount of (long and short) shares
+# traded so far by the account.
+print("total share traded so far: {}".format(portfolioSummary.getTotalShares()))
+# This method returns the total realized P&L of the account.
+print("total P&L of the account {}".format(portfolioSummary.getTotalRealizedPL()))
 
 
 

@@ -1,125 +1,163 @@
-import time
-import pandas as pd
-import shift
-import sys
 import numpy as np
-sys.path.insert(0, 'include')
-# if time%60==0
+import shift
+from sklearn.neighbors import KernelDensity
 
-aapl = pd.DataFrame([['aapl', 198], ['aapl', 209],
-                     ['aapl', 207], ['aapl', 210],
-                     ['aapl', 208], ['aapl', 211],
-                     ['aapl', 212], ['aapl', 216]], columns=['Name', 'Last'])
-amzn = pd.DataFrame([['amzn', 2032], ['amzn', 2314],
-                     ['amzn', 2024], ['amzn', 2335],
-                     ['amzn', 2033], ['amzn', 2338],
-                     ['amzn', 2040], ['amzn', 2342]], columns=['Name', 'Last'])
-portfolio = {'AAPL': aapl, 'AMZN': amzn}
 
-Trader = shift.trader()
-tickers = Trader.getStockList()
-
-def check_signal_bid(faker, Tickers, alpha): #alpha is using as a thresold
-    delta = []
-    for i in Tickers:
-        bp = faker.getBestPrice(i)
-        new = bp.getBidSize()
-        sample_list = portfolio[i].BidSize
-        index = [j for j in range(len(sample_list)) if (j+1)%5==0]
-        data_ticker = []
-        for k in index:
-            data_ticker.append(sample_list[k])
-        n = len(data_ticker)
-        last = data_ticker[n-1]
-        if new > alpha * last:
-            delta.append((new - alpha * last)/(alpha * last))
-        else:
-            delta.append(0)
-    return delta
-
-def check_signal_ask(faker, Tickers, alpha):
-    delta = []
-    for i in Tickers:
-        bp = faker.getBestPrice(i)
-        new = bp.getAskSize()
-        sample_list = portfolio[i].BidSize
-        index = [j for j in range(len(sample_list)) if (j+1)%5==0]
-        data_ticker = []
-        for k in index:
-            data_ticker.append(sample_list[k])
-        n = len(data_ticker)
-        last = data_ticker[n-1]
-        if new > alpha * last:
-            delta.append((new - alpha * last)/(alpha * last))
-        else:
-            delta.append(0)
-    return delta
-
-#reset the elements in the list from 0 to 1 according to their numbers.
 def rank(sample_list):
-    diff = 1/len(sample_list)
+    diff = 1 / len(sample_list)
     copy1 = sample_list.copy()
     copy2 = sample_list.copy()
-    while(len(copy1)>0):
+    while (len(copy1) > 0):
         max_index = copy1.index(max(copy1))
-        copy2[max_index] = diff*len(copy1)
+        copy2[max_index] = diff * len(copy1)
         copy1.remove(copy1[max_index])
     return copy2
 
 
-def weight_adjusting(sample_list, trader):
-    last_price = [0]*len(tickers)
-    for i in range(len(tickers)):
-        bp = trader.getBestPrice(tickers[i])
-        last_price[i] = bp.getLastPrice(tickers[i])
+###########################试验区#############################
+
+
+def rank(sample_list):
+    diff = 1 / len(sample_list)
+    index = 1
+    for i in np.argsort(sample_list):
+        sample_list[i] = index / len(sample_list)
+        index = index + 1
+    return sample_list
+
+
+a = [120, 483, 1, 19, 0.2]
+print(rank(a))
+
+###########################试验区#############################
+
+# assuming the time now is i
+i = 240
+
+
+def Weiping_Algorithm(trader, stockList):
+    delta_bid = []
+    delta_ask = []
+    for stock in tickers:
+        bp = trader.getBestPrice(stock)
+        step = 0.01
+        check_bidsize = bp.getBidSize()
+        sim_bid = np.arange(0, check_bidsize, step)
+        check_asksize = bp.getAskSize()
+        sim_ask = np.arange(0, check_asksize, step)
+        lookback = 500
+        history_index = list(np.arange(i - lookback, i - 1))
+        
+        # get the last 100 history size data to fit the distribution of the moving window
+        
+        history_bidsize = [stockList[stock].bidSize(j) for j in history_index]
+        history_asksize = [stockList[stock].bidSize(j) for j in history_index]
+        history_bidsize = np.array(history_bidsize)
+        history_asksize = np.array(history_asksize)
+        kde_bid = KernelDensity(bandwidth=1.0, kernel="gaussian").fit(history_bidsize[:, None])
+        kde_ask = KernelDensity(bandwidth=1.0, kernel="gaussian").fit(history_asksize[:, None])
+        # check_bidsize = np.array([check_bidsize])
+        # check_asksize = np.array([check_asksize])
+        # log_den_bid = kde_bid.score_sample(check_bidsize[:,None])
+        # log_den_ask = kde_ask.score_sample(check_asksize[:,None])
+        # d_prob_bid = np.exp(log_den_bid)
+        # d_prob_ask = np.exp(log_den_ask)
+        prob_bid = 0.0
+        prob_ask = 0.0
+        for k in sim_bid:
+            temp_bid = np.array([k])
+            prob_bid = prob_bid + (np.exp(kde_bid.score_samples(temp_bid[:, None]))) * step
+        for k in sim_ask:
+            temp_ask = np.array([k])
+            prob_ask = prob_ask + (np.exp(kde_ask.score_samples(temp_ask[:, None]))) * step
+        pvalue_bid = 1 - prob_bid
+        pvalue_ask = 1 - prob_ask
+        thresold_bid = 0.2
+        thresold_ask = 0.2
+        new_bid = 0.0
+        new_ask = 0.0
+        # check the unusual size
+        if pvalue_bid < thresold_bid:
+            new_bid = 1 / pvalue_bid
+        if prob_ask < thresold_ask:
+            new_ask = 1 / pvalue_ask
+        if new_bid:
+            delta_bid.append(new_bid)
+        else:
+            delta_bid.append(0)
+        if new_ask:
+            delta_ask.append(new_ask)
+        else:
+            delta_ask.append(0)
+
+
+# weight adjusting
+last_price = [0] * len(tickers)
+for k in range(len(tickers)):
+    bp = trader.getBestPrice(tickers[k])
+    last_price[k] = bp.getLastPrice(tickers[k])
     last_price = rank(last_price).copy()
-    total = sum(sample_list)
-    weight = [i/total for i in sample_list]
-    for i in range(len(tickers)):
-        weight[i] = weight[i]*(last_price[i]) #use the price to measure the cap then use the cap to modify the weight
-    return weight
+    total_bid = sum(delta_bid)
+    total_ask = sum(delta_ask)
+    weight_bid = [delta / total_bid for delta in delta_bid]
+    weight_ask = [delta / total_ask for delta in delta_ask]
+    for stock in range(len(tickers)):
+        weight_bid[stock] = weight_bid[stock] * last_price[
+                                                           stock]  # use the price to measure the cap then use the cap to modify the weight
+        weight_ask[stock] = weight_ask[stock] * last_price[stock]
+    
+    # order submit
+    limit = 50000
+    money_long = [0] * len(tickers)
+    money_short = [0] * len(tickers)
+    
+    for k in len(range(money_long)):
+        
+        buying_power = trader.getPortfolioSummary().getTotalBp()
+        if buying_power < lmit:
+            limit = buying_power
+        money_long[k] = limit * weight_bid[k]
+        money_short[k] = limit * weight_ask[k]
+        bp = trader.getBestPrice(tickers[k])
+        buy_orders_price = bp.getBidPrice()
+        sell_orders_price = bp.getAskPrice()
+        
+        # submit buy orders
+        if money_long[k] != 0:
+            buy_orders = np.floor(money_long[k] / buy_orders_price)
+            if (buy_orders / 100) >= 1:
+                Makrketbuy = shift.Order(shift.Order.MARKET_BUY, tickers[k], int(buy_orders // 100))
+                trader.submitOrder(Makrketbuy)
+            else:
+                if (buy_orders / 100) > 0.5:
+                    Makrketbuy = shift.Order(shift.Order.MARKET_SELL, tickers[k], 1)
+                    trader.submitOrder(Makrketbuy)
 
+# submit sell orders
+if money_short[k] != 0:
+    item = trader.getPortfolioItem(tickers[k])
+    current_postion = item.getShares()
+    
+    if current_postion > 0:
+        sell_orders = current_postion * weight_ask[k]
+        if (sell_orders / 100) >= 1:
+            Marketsell = shift.Order(shift.Order.MARKET_SELL, tickers[k], int(sell_orders // 100))
+            trader.submitOrder(Marketsell)
+        else:
+            if (sell_orders / 100) > 0.5:
+                Marketsell = shift.Order(shift.Order.MARKET_SELL, tickers[k], 1)
+                trader.submitOrder(Marketsell)
 
-delta_bid = check_signal_bid(Trader,tickers,2)
-delta_ask = check_signal_ask(Trader,tickers,2)
-weight_bid = weight_adjusting(delta_bid)
-weight_ask = weight_adjusting(delta_ask)
-
-
-def new_submit_buy(faker, weight_list , limit):
-    money = [0]*len(tickers)
-    buy_orders = [0]*len(tickers)
-    for i in len(range(money)):
-        money[i] = weight_list[i]*limit
-        bp = faker.getBestPrice(tickers[i])
-        order_price = bp.getBidPrice()
-        buy_orders[i] = np.floor(money[i]/order_price)
-        if money[i]!=0:
-            Marketbuy = shift.Order(shift.Order.MARKET_BUY, tickers[i], buy_orders[i]/100)
-            faker.submitOrder(Marketbuy)
-
-#if each time we check something weird about the ask size
-#we clean the position with the specified stock if the current position is greater than zero
-#if the current position is not greater than zero, we check whether our buying power is enough for doing the short position.
-def new_submit_sell(faker, weight_list,limit):
-    index = [j for j in range(len(tickers)) if weight_list[j]!=0]
-    money = [0]*len(tickers)
-    for i in len(range(money)):
-        money[i] = weight_list[i]*limit
-        bp = faker.getBestPrice(tickers[i])
-        order_price = bp.getAskSize()
-    for i in index:
-        item = faker.getPortfolioItem(tickers[i])
-        current_position = item.getShares()
-        if current_position > 0:
-            Marketsell = shift.Order(shift.Order.MARKET_SELL,tickers[i],current_position/100)
-            faker.submitOrder(Marketsell)
-# if current_position < 0:
-#     buying_power = faker.getPortfolioSummary().getTotalBp() #check the current buying power
-#     if money[i]>buying_power:
-#         sell_orders = np.floor(buying_power/order_price)
-#     elif money[i]<= buying_power:
-#         sell_orders = np.floor(money[i]/order_price)
-#     Marketsell = shift.Order(shift.Order.MARKET_SELL,tickers[i],sell_orders)
-#     faker.submitOrder(Marketsell)
-
+if current_postion < 0:
+    buying_power = trader.getPortfolioSummary().getTotalBp()  # check the current buying power
+    if money_short[k] > buying_power:
+        sell_orders = np.floor(buying_power / sell_orders_price)
+        if money_short[k] <= buying_power:
+            sell_orders = np.floor(money_short[k] / sell_order_price)
+    if (sell_orders / 100) >= 1:
+        Marketsell = shift.Order(shift.Order.MARKET_SELL, tickers[k], int(sell_orders // 100))
+        trader.submitOrder(Marketsell)
+        else:
+            if (sell_orders / 100) > 0.5:
+                Marketsell = shift.Order(shift.Order.MARKET_SELL, tickers[k], 1)
+                trader.submitOrder(Marketsell)
