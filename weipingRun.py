@@ -31,7 +31,7 @@ def Weiping_Algorithm(trader, stockList, tickers):
         sim_bid = np.arange(0, check_bidsize, step)
         check_asksize = bp.getAskSize()
         sim_ask = np.arange(0, check_asksize, step)
-        lookback = 180
+        lookback = 200
         
         # get the last 500 history size data to fit the distribution of the moving window
         history_bidsize = stockList[stock].historicalData(lookback).bidSize
@@ -77,8 +77,7 @@ def Weiping_Algorithm(trader, stockList, tickers):
 # weight adjusting
     last_price = [0] * len(tickers)
     for k in range(len(tickers)):
-        bp = trader.getBestPrice(tickers[k])
-        last_price[k] = bp.getLastPrice(tickers[k])
+        last_price[k] = trader.getLastPrice(tickers[k])
     last_price = rank(last_price).copy()
     total_bid = sum(delta_bid)
     total_ask = sum(delta_ask)
@@ -92,8 +91,8 @@ def Weiping_Algorithm(trader, stockList, tickers):
     limit = 50000
     money_long = [0] * len(tickers)
     money_short = [0] * len(tickers)
-    for k in len(range(money_long)):
-        buying_power = trader.getPortfolioSummary().getTotalBp()
+    for k in range(len(money_long)):
+        buying_power = trader.getPortfolioSummary().getTotalBP()
         if buying_power < limit:
             limit = buying_power
         money_long[k] = limit * weight_bid[k]
@@ -125,7 +124,7 @@ def Weiping_Algorithm(trader, stockList, tickers):
                         Marketsell = shift.Order(shift.Order.MARKET_SELL, tickers[k], 1)
                         trader.submitOrder(Marketsell)
             if current_postion < 0:
-                buying_power = trader.getPortfolioSummary().getTotalBp()
+                buying_power = trader.getPortfolioSummary().getTotalBP()
                 if money_short[k] > buying_power:
                     sell_orders = np.floor(buying_power / sell_orders_price)
                     if money_short[k] <= buying_power:

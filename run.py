@@ -49,36 +49,35 @@ for ticker in tickers:
 '''
 multi-threading agents
 '''
-class liangThread(threading.Thread):
-    def __init__(self):
-        threading.Thread.__init__(self)
-    def run(self):
-        for i in range(1, simulation_duration * 60):
-            time.sleep(1)
-            if i%(60*60)==0:
-                efficient_frontier(tickers, trader, stockList)
-            if i > 380 * 60:
-                return
-liang = liangThread()
-
-# class weipingThread(threading.Thread):
+# class liangThread(threading.Thread):
 #     def __init__(self):
 #         threading.Thread.__init__(self)
 #     def run(self):
 #         for i in range(1, simulation_duration * 60):
 #             time.sleep(1)
-#             if i%20==0 and i > 300:
-#                 Weiping_Algorithm(trader, stockList, tickers)
-#             if i > 5 * 60:
-#                 break
-#         return
-# weiping = weipingThread()
+#             if i%(60*60)==0:
+#                 efficient_frontier(tickers, trader, stockList)
+#             if i > 380 * 60:
+#                 return
+# liang = liangThread()
+
+class weipingThread(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+    def run(self):
+        for i in range(1, simulation_duration * 60):
+            time.sleep(1)
+            if i%30==0 and i > 300:
+                Weiping_Algorithm(trader, stockList, tickers)
+            if i > 380 * 60:
+                break
+        return
+weiping = weipingThread()
 '''
 ********************************************************************************
 Simulation Start
 '''
-liang.start()
-# weiping.start()
+weiping.start()
 for i in range(1, simulation_duration*60):
     time.sleep(1)
     '''
@@ -194,6 +193,16 @@ End simulation clear all stocks in the portfolio book, and cancel all pending
 orders
 '''
 
+# cancel all pending orders
+if trader.getWaitingListSize() != 0:
+    if verbose:
+        print("Canceling Pending Orders!")
+    # trader.cancelAllPendingOrders()
+    for order in trader.getWaitingList():
+        trader.submitCancellation(order)
+    while trader.getWaitingListSize() > 0:
+        time.sleep(1)
+
 # clear all the portfolio items with market sell
 for item in trader.getPortfolioItems().values():
     if item.getShares() > 0:
@@ -205,19 +214,8 @@ for item in trader.getPortfolioItems().values():
 print("Clear portfolio! \n")
 
 
-# cancel all pending orders
-if trader.getWaitingListSize() != 0:
-    if verbose:
-        print("Canceling Pending Orders!")
-    # trader.cancelAllPendingOrders()
-    for order in trader.getWaitingList():
-        trader.submitCancellation(order)
-    while trader.getWaitingListSize() > 0:
-        time.sleep(1)
 
-
-
-time.sleep(60)
+time.sleep(10*60)
 print("portfolio summary-----------------------------------------------------")
 portfolioSummary = trader.getPortfolioSummary()
 # This method returns the total buying power available in the account.
