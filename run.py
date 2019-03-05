@@ -5,7 +5,12 @@ import time
 from credentials import my_username, my_password
 from stockAndPortfolio import Stock
 import datetime
+import numpy as np
+import threading
 
+from liangRun import efficient_frontier
+from weipingRun import Weiping_Algorithm
+from dongxuRun import neuralRegresion
 
 '''
 ********************************************************************************
@@ -41,18 +46,41 @@ stockList = dict()
 for ticker in tickers:
     stockList[ticker] = Stock(ticker)
 
+'''
+multi-threading agents
+'''
+class liangThread(threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+    def run(self):
+        for i in range(1, simulation_duration * 60):
+            time.sleep(1)
+            if i%(60*60)==0:
+                efficient_frontier(tickers, trader, stockList)
+            if i > 380 * 60:
+                return
+liang = liangThread()
 
+# class weipingThread(threading.Thread):
+#     def __init__(self):
+#         threading.Thread.__init__(self)
+#     def run(self):
+#         for i in range(1, simulation_duration * 60):
+#             time.sleep(1)
+#             if i%20==0 and i > 300:
+#                 Weiping_Algorithm(trader, stockList, tickers)
+#             if i > 5 * 60:
+#                 break
+#         return
+# weiping = weipingThread()
 '''
 ********************************************************************************
 Simulation Start
 '''
-
+liang.start()
+# weiping.start()
 for i in range(1, simulation_duration*60):
     time.sleep(1)
-    ####
-    if i > 60:
-        break
-
     '''
     ****************************************************************************
     Data collection
@@ -65,28 +93,41 @@ for i in range(1, simulation_duration*60):
     
     Default tracing back time is 10 seconds.
     '''
-    #information will be collected every second.
-    for ticker in tickers:
-        # info denotes the new information every second.
-        # info list include:
-        # ['bidPrice', 'bidSize', 'askPrice', 'askSize', 'lastPrice']
-        info = []
-        bp = trader.getBestPrice(ticker)
-        info.append(bp.getBidPrice())
-        info.append(bp.getAskSize())
-        info.append(bp.getAskPrice())
-        info.append(bp.getAskSize())
-        info.append(trader.getLastPrice(ticker))
-        stockList[ticker].dataAdd(info)
+    if i%10 == 0:
+        #information will be collected every second.
+        for ticker in tickers:
+            # info denotes the new information every second.
+            # info list include:
+            # ['bidPrice', 'bidSize', 'askPrice', 'askSize', 'lastPrice']
+            info = []
+            bp = trader.getBestPrice(ticker)
+            info.append(bp.getBidPrice())
+            info.append(bp.getAskSize())
+            info.append(bp.getAskPrice())
+            info.append(bp.getAskSize())
+            info.append(trader.getLastPrice(ticker))
+            orderBookPrice = []
+            orderBookSize = []
+            for order in trader.getOrderBook(ticker, shift.OrderBookType.GLOBAL_BID, maxLevel=10):
+                orderBookPrice.append(order.price)
+                orderBookSize.append(order.size)
+            for order in trader.getOrderBook(ticker, shift.OrderBookType.GLOBAL_ASK, maxLevel=10):
+                orderBookPrice.append(order.price)
+                orderBookSize.append(order.size)
+            info.append(np.array(orderBookSize))
+            info.append(np.array(orderBookPrice))
+            stockList[ticker].dataAdd(info)
 
     '''
     ****************************************************************************
     Angli's Algorithm
     Only three major parameters are allowed here, for example:
     >> from liangRun.py import algorithm
-    >> if i%10*60 == 0:
-	>>     algorithm(tickers, trtrader, stockList)
+    >> if i%(10*60) == 0:
+	>>     algorithm(tickers, trader, stockList)
     '''
+
+
 
 
     '''
@@ -94,24 +135,29 @@ for i in range(1, simulation_duration*60):
     Weiping's Algorithm
     Only three major parameters are allowed here, for example:
     >> from liangRun.py import algorithm
-    >> if i%10*60 == 0:
+    >> if i%(10*60) == 0:
 	>>     algorithm(tickers, trader, stockList)
     '''
+    # if i > 500 and i%10 == 0:
+    #     Weiping_Algorithm(trader, stockList, tickers)
+
+
+
+
 
     '''
     ****************************************************************************
     Dongxu's Algorithm
     Only three major parameters are allowed here, for example:
     >> from liangRun.py import algorithm
-    >> if i%10*60 == 0:
+    >> if i%(10*60) == 0:
 	>>     algorithm(tickers, trader, stockList)
     '''
-    if i%5 == 0:
-        bp = trader.getBestPrice(ticker)
-        aapl_buy = shift.Order(shift.Order.LIMIT_BUY, "AAPL", 1, (bp.getBidPrice()+bp.getAskPrice())/2+0.0001)
-        aapl_sell = shift.Order(shift.Order.LIMIT_SELL, "AAPL", 1, (bp.getBidPrice()+bp.getAskPrice())/2)
-        trader.submitOrder(aapl_buy)
-        trader.submitOrder(aapl_sell)
+    # if i%(2*60) == 0:
+    #     neuralRegresion(tickers, trader, stockList)
+
+
+
 
     '''
     ****************************************************************************
@@ -131,10 +177,17 @@ for i in range(1, simulation_duration*60):
         print("total share traded so far: {}".format(portfolioSummary.getTotalShares()))
         # This method returns the total realized P&L of the account.
         print("total P&L of the account {}".format(portfolioSummary.getTotalRealizedPL()))
+        # Show all the items in portfolio
+        print("portfolio summary: \n")
+        print("Symbol\t\tShares\t\tPrice\t\tP&L\t\tTimestamp")
+        for item in trader.getPortfolioItems().values():
+            print("%6s\t\t%6d\t%9.2f\t%7.2f\t\t%26s" %
+                  (item.getSymbol(), item.getShares(), item.getPrice(),
+                   item.getRealizedPL(), item.getTimestamp()))
 
-        # Time to stop the simulation.
-        # if trader.getLastTradeTime().time() > datetime.time(15, 50):
-        #     break
+    # Time to stop the simulation.
+    # if trader.getLastTradeTime().time() > datetime.time(15, 50):
+    #         break
 '''
 ********************************************************************************
 End simulation clear all stocks in the portfolio book, and cancel all pending 
@@ -144,10 +197,13 @@ orders
 # clear all the portfolio items with market sell
 for item in trader.getPortfolioItems().values():
     if item.getShares() > 0:
-        endSell = shift.Order(shift.Order.MARKET_SELL, item.getSymbol(), item.getShares())
-    else:
-        endSell = shift.Order(shift.Order.MARKET_BUY, item.getSymbol(), -item.getShares())
-    trader.submitOrder(endSell)
+        endSell = shift.Order(shift.Order.MARKET_SELL, item.getSymbol(), int(item.getShares()//100))
+        trader.submitOrder(endSell)
+    elif item.getShares() < 0:
+        endSell = shift.Order(shift.Order.MARKET_BUY, item.getSymbol(), int(-item.getShares()//100))
+        trader.submitOrder(endSell)
+print("Clear portfolio! \n")
+
 
 # cancel all pending orders
 if trader.getWaitingListSize() != 0:
@@ -160,6 +216,9 @@ if trader.getWaitingListSize() != 0:
         time.sleep(1)
 
 
+
+time.sleep(60)
+print("portfolio summary-----------------------------------------------------")
 portfolioSummary = trader.getPortfolioSummary()
 # This method returns the total buying power available in the account.
 print("total buying power: {}".format(portfolioSummary.getTotalBP()))
@@ -170,7 +229,12 @@ print("total share traded so far: {}".format(portfolioSummary.getTotalShares()))
 print("total P&L of the account {}".format(portfolioSummary.getTotalRealizedPL()))
 
 
-
+print("portfolio summary: \n")
+print("Symbol\t\tShares\t\tPrice\t\tP&L\t\tTimestamp")
+for item in trader.getPortfolioItems().values():
+    print("%6s\t\t%6d\t%9.2f\t%7.2f\t\t%26s" %
+          (item.getSymbol(), item.getShares(), item.getPrice(),
+           item.getRealizedPL(), item.getTimestamp()))
 
 
 

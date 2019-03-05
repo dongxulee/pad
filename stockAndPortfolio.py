@@ -1,7 +1,7 @@
 import pandas as pd
 
 # This is just for now
-columnsNames = ['bidPrice', 'bidSize', 'askPrice', 'askSize', 'lastPrice']
+columnsNames = ['bidPrice', 'bidSize', 'askPrice', 'askSize', 'lastPrice', 'orderBookPrice', 'orderBookSize']
 
 class Stock:
     def __init__(self, name):
