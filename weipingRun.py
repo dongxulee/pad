@@ -81,8 +81,14 @@ def Weiping_Algorithm(trader, stockList, tickers):
     last_price = rank(last_price).copy()
     total_bid = sum(delta_bid)
     total_ask = sum(delta_ask)
-    weight_bid = [delta / total_bid for delta in delta_bid]
-    weight_ask = [delta / total_ask for delta in delta_ask]
+    if total_bid != 0:
+        weight_bid = [delta / total_bid for delta in delta_bid]
+    elif total_bid==0:
+        weight_bid = [0]*len(delta_bid)
+    if total_ask != 0:
+        weight_ask = [delta / total_ask for delta in delta_ask]
+    elif total_ask==0:
+        weight_ask = [0]*len(delta_ask)
     for stock in range(len(tickers)):
         weight_bid[stock] = weight_bid[stock] * last_price[stock]
         weight_ask[stock] = weight_ask[stock] * last_price[stock]

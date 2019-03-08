@@ -1,7 +1,9 @@
 import pandas as pd
+import shift
+import numpy as np
 
 # This is just for now
-columnsNames = ['bidPrice', 'bidSize', 'askPrice', 'askSize', 'lastPrice', 'orderBookPrice', 'orderBookSize']
+columnsNames = ['bidPrice', 'bidSize', 'askPrice', 'askSize', 'lastPrice']
 
 class Stock:
     def __init__(self, name):
@@ -17,3 +19,37 @@ class Stock:
         
     def historicalData(self, num=10):
         return self.histData.tail(num)
+
+
+
+def portfolioSummary(trader):
+    portfolioSummary = trader.getPortfolioSummary()
+    # This method returns the total buying power available in the account.
+    print("total buying power: {}".format(portfolioSummary.getTotalBP()))
+    # This method returns the total amount of (long and short) shares
+    # traded so far by the account.
+    print("total share traded so far: {}".format(portfolioSummary.getTotalShares()))
+    # This method returns the total realized P&L of the account.
+    print("total P&L of the account {}".format(portfolioSummary.getTotalRealizedPL()))
+    # Show all the items in portfolio
+    print("portfolio summary: \n")
+    print("Symbol\t\tShares\t\tPrice\t\tP&L\t\tTimestamp")
+    for item in trader.getPortfolioItems().values():
+        print("%6s\t\t%6d\t%9.2f\t%7.2f\t\t%26s" %
+              (item.getSymbol(), item.getShares(), item.getPrice(),
+               item.getRealizedPL(), item.getTimestamp()))
+
+
+def infoCollecting(trader, tickers, stockList):
+    for ticker in tickers:
+        # info denotes the new information every second.
+        # info list include:
+        # ['bidPrice', 'bidSize', 'askPrice', 'askSize', 'lastPrice']
+        info = []
+        bp = trader.getBestPrice(ticker)
+        info.append(bp.getBidPrice())
+        info.append(bp.getAskSize())
+        info.append(bp.getAskPrice())
+        info.append(bp.getAskSize())
+        info.append(trader.getLastPrice(ticker))
+        stockList[ticker].dataAdd(info)

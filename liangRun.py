@@ -14,7 +14,7 @@ def efficient_frontier(tickers, trader, stockList, assigned_value=1000000 / 3, t
     # Get data set from universe
     hist_price = pd.DataFrame()
     for ticker in tickers:
-        hist_price = pd.concat([hist_price, stockList[ticker].historicalData(200)['lastPrice']], axis=1).rename(columns={'lastPrice': ticker})
+        hist_price = pd.concat([hist_price, stockList[ticker].historicalData(100)['lastPrice']], axis=1).rename(columns={'lastPrice': ticker})
     # Calculate expected returns and sample covariance
     mu = expected_returns.mean_historical_return(hist_price)
     S = risk_models.sample_cov(hist_price)

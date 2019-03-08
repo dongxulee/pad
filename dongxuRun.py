@@ -1,59 +1,52 @@
-import numpy as np
-from keras.layers import Dense
-from keras.models import Sequential
 import shift
 import time
 
-def neuralRegresion(tickers, trader, stockList):
-    ############################################################################
-    # clear all the portfolio items with market sell
-    for item in trader.getPortfolioItems().values():
-        if item.getShares() > 0:
-            endSell = shift.Order(shift.Order.MARKET_SELL, item.getSymbol(),
-                                  item.getShares())
-        else:
-            endSell = shift.Order(shift.Order.MARKET_BUY, item.getSymbol(),
-                                  -item.getShares())
-        trader.submitOrder(endSell)
-
-    # cancel all pending orders
-    if trader.getWaitingListSize() != 0:
-        print("Canceling Pending Orders!")
-        # trader.cancelAllPendingOrders()
-        for order in trader.getWaitingList():
-            trader.submitCancellation(order)
-        while trader.getWaitingListSize() > 0:
-            time.sleep(1)
-    ############################################################################
-    # model training part
-    numData = 100
-    model = Sequential()
-    model.add(Dense(units=40, activation='softmax', input_dim=40))
-    model.add(Dense(units=100, activation='relu'))
-    model.add(Dense(units=10, activation='relu'))
-    model.add(Dense(1, activation='relu'))
-    model.compile(optimizer='adam', loss='mean_squared_error')
-    X_train = []
-    Y_train = []
-    timeShift = 30
+def marketMaker(tickers, trader, i):
     for ticker in tickers:
-        stockInfo = stockList[ticker].historicalData(numData)
-        for i in range(numData - timeShift):
-            X_train.append(stockInfo.orderBookPrice[i] * stockInfo.orderBookSize[i])
-        for j in range(numData - timeShift):
-            Y_train.append(stockInfo.lastPrice[j+timeShift])
-    model.fit(np.array(X_train), np.array(Y_train), epochs=5, batch_size=32)
-
-
-    # order execution part based on the model prediction
-    for ticker in tickers:
-        stockInfo = stockList[ticker].historicalData(2)
-        X = stockInfo.orderBookPrice[-1] * stockInfo.orderBookSize[-1]
-        predictPrice = model.predict(X)
         bp = trader.getBestPrice(ticker)
-        if predictPrice > bp.getBidPrice():
-            limit_buy = shift.Order(shift.Order.LIMIT_BUY, ticker, 10, bp.getAskPrice())
+        bid = bp.getBidPrice()
+        ask = bp.getAskPrice()
+        spread = ask-bid
+        if spread > 0.05:
+            eps = 0.01
+            limit_buy = shift.Order(shift.Order.LIMIT_BUY, ticker,1, bid+eps)
+            limit_sell = shift.Order(shift.Order.LIMIT_SELL, ticker,1, ask-eps)
             trader.submitOrder(limit_buy)
-        elif predictPrice < bp.getAskPrice():
-            limit_sell = shift.Order(shift.Order.LIMIT_SELL, ticker, 10, bp.getBidPrice())
             trader.submitOrder(limit_sell)
+            time.sleep(0.01)
+            # cancel all pending orders
+            while trader.getWaitingListSize() != 0:
+                # print("Canceling Pending Orders!")
+                for order in trader.getWaitingList():
+                    if order.type == shift.Order.LIMIT_BUY:
+                        order.type = shift.Order.CANCEL_BID
+                    else:
+                        order.type = shift.Order.CANCEL_ASK
+                    trader.submitOrder(order)
+                    time.sleep(0.1)
+            print("Order Canceled!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+
+    if i%(100)==0:
+        while(True):
+            # clear all the portfolio items with market sell
+            for item in trader.getPortfolioItems().values():
+                if item.getShares() > 0:
+                    endSell = shift.Order(shift.Order.MARKET_SELL,
+                                          item.getSymbol(),
+                                          int(item.getShares() // 100))
+                    trader.submitOrder(endSell)
+            for item in trader.getPortfolioItems().values():
+                if item.getShares() < 0:
+                    endSell = shift.Order(shift.Order.MARKET_BUY,
+                                          item.getSymbol(),
+                                          int(-item.getShares() // 100))
+                    trader.submitOrder(endSell)
+            print(".\n")
+            sum = 0.0
+            for item in trader.getPortfolioItems().values():
+                sum+=abs(item.getShares())
+            if(sum==0):
+                break
+            else:
+                time.sleep(0.1)
+        print("portfolio clear!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
