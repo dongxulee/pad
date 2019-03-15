@@ -64,3 +64,22 @@ def efficient_frontier(tickers, trader, stockList, assigned_value=1000000 / 3, t
     ef.portfolio_performance(verbose=True)
     print(allocation)
     print("Funds remaining: ${:.2f}".format(leftover))
+
+
+########################################################
+import statsmodels.api as sm
+
+# linear regression
+
+
+time_series = list(range(0,370,10))
+avg_return = {}
+for ticker in tickers:
+    y = price_record[ticker]
+    x = sm.add_constant(time_series)
+    est = sm.OLS(y, x).fit()
+    b, a = est.params
+    avg_return[ticker] = a * 360 / b
+    # price_forecast = est.predict(x)
+    # plt.scatter(x, y)
+    # est.summary()

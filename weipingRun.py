@@ -38,8 +38,8 @@ def Weiping_Algorithm(trader, stockList, tickers):
         history_asksize = stockList[stock].historicalData(lookback).askSize
         history_bidsize = np.array(history_bidsize)
         history_asksize = np.array(history_asksize)
-        kde_bid = KernelDensity(bandwidth=1.0, kernel="gaussian").fit(history_bidsize[:, None])
-        kde_ask = KernelDensity(bandwidth=1.0, kernel="gaussian").fit(history_asksize[:, None])
+        kde_bid = KernelDensity(bandwidth=0.8, kernel="gaussian").fit(history_bidsize[:, None])
+        kde_ask = KernelDensity(bandwidth=0.8, kernel="gaussian").fit(history_asksize[:, None])
         # check_bidsize = np.array([check_bidsize])
         # check_asksize = np.array([check_asksize])
         # log_den_bid = kde_bid.score_sample(check_bidsize[:,None])

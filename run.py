@@ -3,12 +3,8 @@ sys.path.insert(0, 'include')
 import shift
 import time
 from credentials import my_username, my_password
-from stockAndPortfolio import Stock, portfolioSummary, infoCollecting
+from stockAndPortfolio import Stock, portfolioInfo, infoCollecting, cancelAllPendingOrders, clearAllPortfolioItems
 import datetime
-import threading
-
-from liangRun import efficient_frontier
-from weipingRun import Weiping_Algorithm
 from dongxuRun import marketMaker
 
 '''
@@ -47,53 +43,6 @@ for ticker in tickers:
 ********************************************************************************
 multi-threading agents, define the algorithm running time below
 '''
-weipingStartTime = 300
-weipingTimeInterval = 30
-class weipingThread(threading.Thread):
-    def __init__(self):
-        threading.Thread.__init__(self)
-    def run(self):
-        for i in range(1, simulation_duration * 60):
-            time.sleep(1)
-            if i%weipingTimeInterval==0 and i > weipingStartTime:
-                Weiping_Algorithm(trader, stockList, tickers)
-            if trader.getLastTradeTime().time() > timeToStop:
-                return
-#
-#
-# liangStartTime = 1600
-# liangTimeInterval = 60*30
-# class weipingThread(threading.Thread):
-#     def __init__(self):
-#         threading.Thread.__init__(self)
-#     def run(self):
-#         for i in range(1, simulation_duration * 60):
-#             time.sleep(1)
-#             if i%liangTimeInterval==0 and i > liangStartTime:
-#                 efficient_frontier(tickers, trader, stockList)
-#             if trader.getLastTradeTime().time() > timeToStop:
-#                 return
-
-
-# dongxuStartTime = 1000
-# dongxuTimeInterval = 0.01
-# class dongxuThread(threading.Thread):
-#     def __init__(self):
-#         threading.Thread.__init__(self)
-#     def run(self):
-#         for i in range(1, simulation_duration * 60 * 100):
-#             time.sleep(dongxuTimeInterval)
-#             if i > dongxuStartTime:
-#                 marketMaker(tickers, trader, i)
-#             if trader.getLastTradeTime().time() > timeToStop:
-#                 return
-
-# dongxu = dongxuThread()
-weiping = weipingThread()
-# liang = weipingThread()
-weiping.start()
-# # liang.start()
-# dongxu.start()
 
 
 '''
@@ -114,27 +63,47 @@ for i in range(1, simulation_duration*60):
     
     Default tracing back time is 10 seconds.
     '''
-    if i%10 == 0:
+    if i%1 == 0:
         #information will be collected every 10 second.
         infoCollecting(trader, tickers, stockList)
+
+    if i % (20*60) == 0:
+        for ticker in tickers:
+            stockList[ticker].refreshData()
     '''
     ****************************************************************************
     Portfolio summary every 20 seconds
     '''
     # this is the test function for information collection
-    if i % 10 == 0:
+    if i % 20 == 0:
         if verbose:
-            print()
+            print("\n")
             print(f"Trading Time: {i // 60} min")
+            print(trader.getLastTradeTime().time())
 
-        portfolioSummary(trader)
+        portfolioInfo(trader)
 
-    # Time to stop the simulation.
-    if trader.getLastTradeTime().time() > timeToStop:
+
+    '''
+    ****************************************************************************
+    Dongxu's strategy
+    '''
+    dongxuStartTime = 60*4
+    dongxuTimeInterval = 10
+    if (i > dongxuStartTime) and i%dongxuTimeInterval == 0:
+        marketMaker(trader, stockList, tickers, lookBack = 200,
+                                    lag = 9,
+                                    numNeighbors = 7, decay = 0.8)
+
+    # substantial loss happen terminate the program
+    if i%(60) == 0:
+        portfolioSummary = trader.getPortfolioSummary()
+        if portfolioSummary.getTotalRealizedPL() < -2000.00 \
+                or portfolioSummary.getTotalBP() < 300000:
             break
-
-
-
+        # Time to stop the simulation.
+        if trader.getLastTradeTime().time() > timeToStop:
+            break
 
 '''
 ********************************************************************************
@@ -143,52 +112,14 @@ orders
 '''
 
 # cancel all pending orders
-if trader.getWaitingListSize() != 0:
-    # print("Canceling Pending Orders!")
-    for order in trader.getWaitingList():
-        if order.type == shift.Order.LIMIT_BUY:
-            order.type = shift.Order.CANCEL_BID
-        else:
-            order.type = shift.Order.CANCEL_ASK
-        trader.submitOrder(order)
-        while (trader.getWaitingListSize() != 0):
-            time.sleep(0.1)
-        print("Order Canceled!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-
-
+cancelAllPendingOrders(trader)
 # clear all the portfolio items with market sell
-for item in trader.getPortfolioItems().values():
-    if item.getShares() > 0:
-        endSell = shift.Order(shift.Order.MARKET_SELL, item.getSymbol(), int(item.getShares()//100))
-        trader.submitOrder(endSell)
-    elif item.getShares() < 0:
-        endSell = shift.Order(shift.Order.MARKET_BUY, item.getSymbol(), int(-item.getShares()//100))
-        trader.submitOrder(endSell)
-print("Clear portfolio! \n")
+clearAllPortfolioItems(trader)
 
 
-# Wait several minutes for the market order to get executed
+# Wait several minutes for the orders to get executed
 time.sleep(7*60)
 print("portfolio summary-----------------------------------------------------")
-portfolioSummary(trader)
+portfolioInfo(trader)
 
 trader.disconnect()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
