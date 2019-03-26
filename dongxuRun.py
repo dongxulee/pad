@@ -1,9 +1,9 @@
 import shift
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
-import time
 
-def signalGenerator(stockList, ticker, lookBack , lag, numNeighbors, decay = 0.2):
+
+def signalGenerator(stockList, ticker, lookBack , lag, numNeighbors, decay):
     '''
      k nearest neighbor classifier.
      input: stockList
