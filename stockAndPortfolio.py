@@ -2,6 +2,7 @@ import pandas as pd
 import shift
 import numpy as np
 import time
+from dongxuRun import setupSellOrder, setupBuyOrder
 
 # This is just for now
 columnsNames = ['bidPrice', 'bidSize', 'askPrice', 'askSize', 'lastPrice', 'orderBook']
@@ -24,8 +25,34 @@ class Stock:
     def getData(self):
         return self.histData
 
-    def refreshData(self):
-        self.histData = self.histData.tail(300)
+    def refreshData(self, num):
+        self.histData = self.histData.tail(num)
+
+
+def infoCollecting(trader, tickers, stockList, length):
+    depth = 10
+    for ticker in tickers:
+        # info denotes the new information every second.
+        # info list include:
+        # ['bidPrice', 'bidSize', 'askPrice', 'askSize', 'lastPrice', 'orderBook']
+        info = []
+        bp = trader.getBestPrice(ticker)
+        info.append(bp.getBidPrice())
+        info.append(bp.getAskSize())
+        info.append(bp.getAskPrice())
+        info.append(bp.getAskSize())
+        info.append(trader.getLastPrice(ticker))
+        size = []
+        for order in trader.getOrderBook(ticker, shift.OrderBookType.GLOBAL_BID, depth):
+            size.append(order.size)
+        size = [0]*(depth-len(size)) + size
+        for order in trader.getOrderBook(ticker, shift.OrderBookType.GLOBAL_ASK, depth):
+            size.append(order.size)
+        size = size + [0]*(depth*2 - len(size))
+        info.append(np.array(size))
+        stockList[ticker].dataAdd(info)
+        if stockList[ticker].getData().shape[0] > length:
+            stockList[ticker].refreshData(int(length*0.8))
 
 
 
@@ -47,51 +74,21 @@ def portfolioInfo(trader):
                item.getRealizedPL(), item.getTimestamp()))
 
 
-def infoCollecting(trader, tickers, stockList):
+
+def clearAllPortfolioItems(trader, tickers):
+    # clear all the portfolio items with market sell
     for ticker in tickers:
-        # info denotes the new information every second.
-        # info list include:
-        # ['bidPrice', 'bidSize', 'askPrice', 'askSize', 'lastPrice', 'orderBook']
-        info = []
-        bp = trader.getBestPrice(ticker)
-        info.append(bp.getBidPrice())
-        info.append(bp.getAskSize())
-        info.append(bp.getAskPrice())
-        info.append(bp.getAskSize())
-        info.append(trader.getLastPrice(ticker))
-        size = []
-        for order in trader.getOrderBook(ticker, shift.OrderBookType.GLOBAL_BID, 10):
-            size.append(order.size)
-        size = [0]*(10-len(size)) + size
-        for order in trader.getOrderBook(ticker, shift.OrderBookType.GLOBAL_ASK, 10):
-            size.append(order.size)
-        size = size + [0]*(20 - len(size))
-        info.append(np.array(size))
-        stockList[ticker].dataAdd(info)
+        item = trader.getPortfolioItem(ticker)
+        if item.getShares() > 0:
+            closeOrder = shift.Order(shift.Order.MARKET_SELL, ticker, item.getShares())
+            trader.submitOrder(closeOrder)
+        elif item.getShares() < 0:
+            closeOrder = shift.Order(shift.Order.MARKET_BUY, ticker, -item.getShares())
+            trader.submitOrder(closeOrder)
+    time.sleep(60)
+    print("Clear portfolio!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
 
 
 def cancelAllPendingOrders(trader):
-    # cancel all pending orders
-    if trader.getWaitingListSize() != 0:
-        # print("Canceling Pending Orders!")
-        for order in trader.getWaitingList():
-            if order.type == shift.Order.LIMIT_BUY:
-                order.type = shift.Order.CANCEL_BID
-            else:
-                order.type = shift.Order.CANCEL_ASK
-            trader.submitOrder(order)
-        while (trader.getWaitingListSize() != 0):
-            time.sleep(0.1)
-        print("Order Canceled!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
-
-def clearAllPortfolioItems(trader):
-    # clear all the portfolio items with market sell
-    for item in trader.getPortfolioItems().values():
-        if item.getShares() > 0:
-            endSell = shift.Order(shift.Order.MARKET_SELL, item.getSymbol(), int(item.getShares()/100))
-            trader.submitOrder(endSell)
-        elif item.getShares() < 0:
-            endSell = shift.Order(shift.Order.MARKET_BUY, item.getSymbol(), int(item.getShares()/100))
-            trader.submitOrder(endSell)
-    time.sleep(5)
-    print("Clear portfolio!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
+    for order in trader.getWaitingList():
+            trader.submitCancellation(order)
