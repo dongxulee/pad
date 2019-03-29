@@ -28,7 +28,7 @@ trader.subAllOrderBook()
 simulation_duration = 380
 
 # Time to stop the simulation
-timeToStop = datetime.time(12, 30)
+timeToStop = datetime.time(15, 40)
 # All companies' ticker in Dow Jones
 tickers = trader.getStockList()
 # info diction for every ticker
@@ -67,7 +67,7 @@ for i in range(1, simulation_duration*60):
     if i > dongxuStartTime and i % dongxuTimeInterval == 0:
         marketMaker(2 ,trader, stockList, tickers, lookBack = 105,
                                     lag = dongxuTimeInterval-1,
-                                    numNeighbors = 10, decay = 0.3)
+                                    numNeighbors = 10, decay = 1)
     '''
     ****************************************************************************
     Risk Control and time management 

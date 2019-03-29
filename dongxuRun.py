@@ -2,7 +2,6 @@ import shift
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC
-from sklearn.ensemble import RandomForestClassifier
 import time
 
 def setupBuyOrder(trader, ticker, signal):
@@ -132,22 +131,26 @@ def signalGenerator2(stockList, ticker, lookBack , lag, decay):
 
      delta could be something related to volatility
     '''
+
+    pro = 0.025
     # data preparation part
     data = stockList[ticker].historicalData(lookBack)
     data = data.reset_index(drop=True)
     X = data["orderBook"][lookBack-1]
     xTrain = []
     yTrain = []
-    delta = data["lastPrice"].std() * (lag**(1/2)) * decay
+    delta_low = data["lastPrice"].diff(lag).quantile(pro)
+    delta_high = data["lastPrice"].diff(lag).quantile(1-pro)
     for i in range(0, lookBack - lag):
         xTrain.append(data["orderBook"][i])
         jump = data["lastPrice"][i + lag] - data["lastPrice"][i]
-        if jump > delta or jump > 0.3:
+        if jump > delta_high or jump > 0.2:
             yTrain.append(1)
-        elif jump < -delta or jump < -0.3:
+        elif jump < delta_low or jump < -0.2:
             yTrain.append(-1)
         else:
             yTrain.append(0)
+
     # training and prediction part
     if len(set(yTrain)) != 1:
         generator = SVC(gamma='auto')

@@ -2,19 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="baa694d2-e9d7-4e04-90c2-9e36d5ae98df" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/pad.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/pad.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SATC_S2019.pdf" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/credentials.py" beforeDir="false" afterPath="$PROJECT_DIR$/credentials.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demo.py" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/dongxuRun.py" beforeDir="false" afterPath="$PROJECT_DIR$/dongxuRun.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/goodcbfs.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/initiator.cfg" beforeDir="false" afterPath="$PROJECT_DIR$/initiator.cfg" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/run.py" beforeDir="false" afterPath="$PROJECT_DIR$/run.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/stockAndPortfolio.py" beforeDir="false" afterPath="$PROJECT_DIR$/stockAndPortfolio.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/tradingDays.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/zitrader.py" beforeDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -26,7 +15,7 @@
     <SUITE FILE_PATH="coverage/pad$zitrader.coverage" NAME="zitrader Coverage Results" MODIFIED="1551456707569" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/pad$liangRun.coverage" NAME="liangRun Coverage Results" MODIFIED="1551479692899" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/pad$infoFlow.coverage" NAME="infoFlow Coverage Results" MODIFIED="1551468918330" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/pad$run.coverage" NAME="run Coverage Results" MODIFIED="1553838402860" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/pad$run.coverage" NAME="run Coverage Results" MODIFIED="1553877367513" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/pad$dongxuRun.coverage" NAME="dongxuRun Coverage Results" MODIFIED="1551136426824" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="FileEditorManager">
@@ -34,8 +23,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/run.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-21">
-              <caret line="64" column="7" selection-start-line="64" selection-start-column="7" selection-end-line="64" selection-end-column="7" />
+            <state relative-caret-position="215">
+              <caret line="69" column="64" selection-start-line="69" selection-start-column="64" selection-end-line="69" selection-end-column="64" />
               <folding>
                 <element signature="e#0#10#0" expanded="true" />
               </folding>
@@ -46,10 +35,15 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/dongxuRun.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3007">
-              <caret line="151" column="29" selection-start-line="151" selection-start-column="29" selection-end-line="151" selection-end-column="29" />
+            <state>
+              <caret line="149" column="29" lean-forward="true" selection-start-line="149" selection-start-column="29" selection-end-line="149" selection-end-column="29" />
               <folding>
                 <element signature="e#0#12#0" expanded="true" />
+                <element signature="e#223#467#0" />
+                <element signature="e#517#765#0" />
+                <element signature="e#814#2915#0" />
+                <element signature="e#3105#3748#0" />
+                <element signature="e#3835#4797#0" />
               </folding>
             </state>
           </provider>
@@ -88,10 +82,10 @@
         <option value="$PROJECT_DIR$/liangRun.py" />
         <option value="$PROJECT_DIR$/weipingRun.py" />
         <option value="$PROJECT_DIR$/initiator.cfg" />
-        <option value="$PROJECT_DIR$/dongxuRun.py" />
         <option value="$PROJECT_DIR$/credentials.py" />
         <option value="$PROJECT_DIR$/stockAndPortfolio.py" />
         <option value="$PROJECT_DIR$/run.py" />
+        <option value="$PROJECT_DIR$/dongxuRun.py" />
       </list>
     </option>
   </component>
@@ -330,12 +324,12 @@
       <workItem from="1552578324964" duration="2000" />
       <workItem from="1552676931071" duration="49000" />
       <workItem from="1552790304577" duration="999000" />
-      <workItem from="1553789112475" duration="35959000" />
+      <workItem from="1553789112475" duration="38179000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="200725000" />
+    <option name="totallyTimeSpent" value="202945000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1440" height="900" extended-state="0" />
@@ -345,7 +339,7 @@
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32771084" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.49928468" visible="true" weight="0.045783132" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.49928468" visible="true" weight="0.96385545" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -490,8 +484,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/run.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-21">
-          <caret line="64" column="7" selection-start-line="64" selection-start-column="7" selection-end-line="64" selection-end-column="7" />
+        <state relative-caret-position="215">
+          <caret line="69" column="64" selection-start-line="69" selection-start-column="64" selection-end-line="69" selection-end-column="64" />
           <folding>
             <element signature="e#0#10#0" expanded="true" />
           </folding>
@@ -500,10 +494,15 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/dongxuRun.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3007">
-          <caret line="151" column="29" selection-start-line="151" selection-start-column="29" selection-end-line="151" selection-end-column="29" />
+        <state>
+          <caret line="149" column="29" lean-forward="true" selection-start-line="149" selection-start-column="29" selection-end-line="149" selection-end-column="29" />
           <folding>
             <element signature="e#0#12#0" expanded="true" />
+            <element signature="e#223#467#0" />
+            <element signature="e#517#765#0" />
+            <element signature="e#814#2915#0" />
+            <element signature="e#3105#3748#0" />
+            <element signature="e#3835#4797#0" />
           </folding>
         </state>
       </provider>
