@@ -132,7 +132,7 @@ def signalGenerator2(stockList, ticker, lookBack , lag, decay):
      delta could be something related to volatility
     '''
 
-    pro = 0.025
+    pro = 0.1
     # data preparation part
     data = stockList[ticker].historicalData(lookBack)
     data = data.reset_index(drop=True)
