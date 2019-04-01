@@ -2,7 +2,6 @@ import pandas as pd
 import shift
 import numpy as np
 import time
-from dongxuRun import setupSellOrder, setupBuyOrder
 
 # This is just for now
 columnsNames = ['bidPrice', 'bidSize', 'askPrice', 'askSize', 'lastPrice', 'orderBook']
@@ -47,7 +46,7 @@ def infoCollecting(trader, tickers, stockList, length):
             size.append(order.size)
         size = [0]*(depth-len(size)) + size
         for order in trader.getOrderBook(ticker, shift.OrderBookType.GLOBAL_ASK, depth):
-            size.append(order.size)
+            size.append(-order.size)
         size = size + [0]*(depth*2 - len(size))
         info.append(np.array(size))
         stockList[ticker].dataAdd(info)

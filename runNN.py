@@ -1,11 +1,12 @@
 import sys
+import os
 import shift
 import time
 from credentials import my_username, my_password
 from stockAndPortfolio import Stock, portfolioInfo, infoCollecting, clearAllPortfolioItems, cancelAllPendingOrders
 import datetime
 from dongxuRun import marketMaker
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.layers import Dense
 
 
@@ -31,13 +32,29 @@ trader.subAllOrderBook()
 simulation_duration = 380
 
 # Time to stop the simulation
-timeToStop = datetime.time(15, 50)
+timeToStop = datetime.time(11, 00)
 # All companies' ticker in Dow Jones
 tickers = trader.getStockList()
 # info diction for every ticker
 stockList = dict()
 for ticker in tickers:
     stockList[ticker] = Stock(ticker)
+
+# neural network approach
+modelList = dict()
+for ticker in tickers:
+    if os.path.isfile('model/' + ticker + '.h5'):
+        modelList[ticker] = load_model('model/' + ticker + '.h5')
+    else:
+        model = Sequential()
+        model.add(Dense(units=20, activation='sigmoid', input_dim=20))
+        model.add(Dense(units=30, activation='relu'))
+        model.add(Dense(units=20, activation='relu'))
+        model.add(Dense(units=3, activation='softmax'))
+        model.compile(loss='categorical_crossentropy',
+                      optimizer= 'Adam',
+                      metrics=['accuracy'])
+        modelList[ticker] = model
 '''
 ********************************************************************************
 Simulation Start
@@ -65,10 +82,18 @@ for i in range(1, simulation_duration*60):
     ****************************************************************************
     Dongxu's strategy
     '''
+    # dongxuStartTime = 360
+    # dongxuTimeInterval = 1
+    # if i > dongxuStartTime and i % dongxuTimeInterval == 0:
+    #     marketMaker(2 , trader, stockList, tickers, lookBack = 305,
+    #                                 lag = 5,
+    #                                 numNeighbors = 10, decay = 1)
+
+    # NN approach
     dongxuStartTime = 360
     dongxuTimeInterval = 1
     if i > dongxuStartTime and i % dongxuTimeInterval == 0:
-        marketMaker(2 , trader, stockList, tickers, lookBack = 305,
+        marketMaker(3 , modelList, trader, stockList, tickers, lookBack = 305,
                                     lag = 5,
                                     numNeighbors = 10, decay = 1)
 
@@ -91,6 +116,11 @@ for i in range(1, simulation_duration*60):
 End simulation clear all stocks in the portfolio book, and cancel all pending 
 orders
 '''
+
+# save the model
+for ticker in tickers:
+    model = modelList[ticker]
+    model.save('model/' + ticker + '.h5')
 
 # cancel all pending orders
 cancelAllPendingOrders(trader)
