@@ -8,7 +8,7 @@ import datetime
 from dongxuRun import marketMaker
 from keras.models import Sequential, load_model
 from keras.layers import Dense
-
+from keras import regularizers
 
 '''
 ********************************************************************************
@@ -32,7 +32,7 @@ trader.subAllOrderBook()
 simulation_duration = 380
 
 # Time to stop the simulation
-timeToStop = datetime.time(11, 00)
+timeToStop = datetime.time(10, 00)
 # All companies' ticker in Dow Jones
 tickers = trader.getStockList()
 # info diction for every ticker
@@ -43,13 +43,18 @@ for ticker in tickers:
 # neural network approach
 modelList = dict()
 for ticker in tickers:
+    print("Construct model: " +  ticker)
     if os.path.isfile('model/' + ticker + '.h5'):
         modelList[ticker] = load_model('model/' + ticker + '.h5')
     else:
         model = Sequential()
-        model.add(Dense(units=20, activation='sigmoid', input_dim=20))
-        model.add(Dense(units=30, activation='relu'))
-        model.add(Dense(units=20, activation='relu'))
+        model.add(Dense(units=20, activation='relu', input_dim=20))
+        model.add(Dense(units=100, activation='relu',
+                kernel_regularizer=regularizers.l2(0.01),
+                activity_regularizer=regularizers.l1(0.01)))
+        model.add(Dense(units=100, activation='relu',
+                        kernel_regularizer=regularizers.l2(0.01),
+                        activity_regularizer=regularizers.l1(0.01)))
         model.add(Dense(units=3, activation='softmax'))
         model.compile(loss='categorical_crossentropy',
                       optimizer= 'Adam',
@@ -116,12 +121,6 @@ for i in range(1, simulation_duration*60):
 End simulation clear all stocks in the portfolio book, and cancel all pending 
 orders
 '''
-
-# save the model
-for ticker in tickers:
-    model = modelList[ticker]
-    model.save('model/' + ticker + '.h5')
-
 # cancel all pending orders
 cancelAllPendingOrders(trader)
 # clear all the portfolio items with market sell
@@ -132,3 +131,9 @@ print("portfolio summary-----------------------------------------------------")
 portfolioInfo(trader)
 
 trader.disconnect()
+
+# save the  NN model
+for ticker in tickers:
+    print("Save model: " + ticker)
+    model = modelList[ticker]
+    model.save('model/' + ticker + '.h5')

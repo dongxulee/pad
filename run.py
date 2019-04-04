@@ -5,9 +5,6 @@ from credentials import my_username, my_password
 from stockAndPortfolio import Stock, portfolioInfo, infoCollecting, clearAllPortfolioItems, cancelAllPendingOrders
 import datetime
 from dongxuRun import marketMaker
-from keras.models import Sequential
-from keras.layers import Dense
-
 
 '''
 ********************************************************************************
@@ -69,7 +66,7 @@ for i in range(1, simulation_duration*60):
     dongxuTimeInterval = 1
     if i > dongxuStartTime and i % dongxuTimeInterval == 0:
         marketMaker(2 , trader, stockList, tickers, lookBack = 305,
-                                    lag = 5,
+                                    lag = 3,
                                     numNeighbors = 10, decay = 1)
 
 
@@ -80,8 +77,8 @@ for i in range(1, simulation_duration*60):
     # substantial loss happen terminate the program
     if i % 60 == 0:
         portfolioSummary = trader.getPortfolioSummary()
-        if portfolioSummary.getTotalRealizedPL() < -1000.00 \
-                or portfolioSummary.getTotalBP() < 500000:
+        if portfolioSummary.getTotalRealizedPL() < -3000.00 \
+                or portfolioSummary.getTotalBP() < 600000:
             break
         # Time to stop the simulation.
         if trader.getLastTradeTime().time() > timeToStop:
@@ -96,7 +93,7 @@ orders
 cancelAllPendingOrders(trader)
 # clear all the portfolio items with market sell
 clearAllPortfolioItems(trader, tickers)
-
+time.sleep(200)
 # Print out the portfolio summary
 print("portfolio summary-----------------------------------------------------")
 portfolioInfo(trader)

@@ -72,7 +72,7 @@ def upDateOrder(trader, signal, ticker):
 
 
 # could modify this function as multi-threading market makers
-def marketMaker(maker, modelList, trader, stockList, tickers, lookBack, lag,
+def marketMaker(maker, trader, stockList, tickers, lookBack, lag,
                                  numNeighbors, decay):
     print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>")
     for ticker in tickers:
@@ -84,13 +84,14 @@ def marketMaker(maker, modelList, trader, stockList, tickers, lookBack, lag,
             signal = signalGenerator2(stockList, ticker = ticker,
                                      lookBack = lookBack, lag = lag,
                                      decay = decay)
-        elif maker == 3:
-            signal = signalGenerator3(stockList, modelList, ticker=ticker,
-                                      lookBack=lookBack, lag=lag,
-                                      )
+        # elif maker == 3:
+        #     signal = signalGenerator3(stockList, modelList, ticker=ticker,
+        #                               lookBack=lookBack, lag=lag,
+        #                               )
 
         else:
             signal = 0
+        print(signal)
         upDateOrder(trader, signal, ticker = ticker)
 
 
@@ -149,8 +150,8 @@ def signalGenerator2(stockList, ticker, lookBack , lag, decay):
     X = data["orderBook"][lookBack-1]
     xTrain = []
     yTrain = []
-    delta_low = data["lastPrice"].pct_change(lag).quantile(pro)
-    delta_high = data["lastPrice"].pct_change(lag).quantile(1-pro)
+    delta_low = -0.0005 #data["lastPrice"].pct_change(lag).quantile(pro)
+    delta_high = 0.0005 #data["lastPrice"].pct_change(lag).quantile(1-pro)
     for i in range(0, lookBack - lag):
         xTrain.append(data["orderBook"][i])
         if data["lastPrice"][i] != 0:
@@ -184,14 +185,15 @@ def signalGenerator3(stockList, modelList, ticker, lookBack , lag):
     '''
 
     pro = 0.025
+    split = 200
     # data preparation part
     data = stockList[ticker].historicalData(lookBack)
     data = data.reset_index(drop=True)
     X = data["orderBook"][lookBack-1]
     xTrain = []
     yTrain = []
-    delta_low = data["lastPrice"].pct_change(lag).quantile(pro)
-    delta_high = data["lastPrice"].pct_change(lag).quantile(1-pro)
+    delta_low = -0.0005 #data["lastPrice"].pct_change(lag).quantile(pro)
+    delta_high = 0.0005 #data["lastPrice"].pct_change(lag).quantile(1-pro)
     for i in range(0, lookBack - lag):
         xTrain.append(data["orderBook"][i])
         if data["lastPrice"][i] != 0:
@@ -207,10 +209,10 @@ def signalGenerator3(stockList, modelList, ticker, lookBack , lag):
 
     # training and prediction part
     generator = modelList[ticker]
-    generator.train_on_batch(np.array(xTrain), np.array(yTrain))
-    test_loss, test_acc = generator.evaluate(np.array(xTrain), np.array(yTrain))
+    generator.train_on_batch(np.array(xTrain[:split]), np.array(yTrain[:split]))
+    test_loss, test_acc = generator.evaluate(np.array(xTrain[split:]), np.array(yTrain[split:]))
     print(test_acc)
-    if test_acc >= 0.98:
+    if test_acc >= 0.80:
         prediction = generator.predict(np.array([X]))[0]
         if np.argmax(prediction) == 0:
             return 1

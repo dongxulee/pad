@@ -79,10 +79,10 @@ def clearAllPortfolioItems(trader, tickers):
     for ticker in tickers:
         item = trader.getPortfolioItem(ticker)
         if item.getShares() > 0:
-            closeOrder = shift.Order(shift.Order.MARKET_SELL, ticker, item.getShares())
+            closeOrder = shift.Order(shift.Order.MARKET_SELL, ticker, int(item.getShares()/100))
             trader.submitOrder(closeOrder)
         elif item.getShares() < 0:
-            closeOrder = shift.Order(shift.Order.MARKET_BUY, ticker, -item.getShares())
+            closeOrder = shift.Order(shift.Order.MARKET_BUY, ticker, int(-item.getShares()/100))
             trader.submitOrder(closeOrder)
     time.sleep(60)
     print("Clear portfolio!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n")
