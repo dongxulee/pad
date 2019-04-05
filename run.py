@@ -65,7 +65,7 @@ for i in range(1, simulation_duration*60):
     dongxuStartTime = 360
     dongxuTimeInterval = 1
     if i > dongxuStartTime and i % dongxuTimeInterval == 0:
-        marketMaker(2 , trader, stockList, tickers, lookBack = 305,
+        marketMaker(2, trader, stockList, tickers, lookBack = 305,
                                     lag = 3,
                                     numNeighbors = 10, decay = 1)
 
@@ -77,7 +77,7 @@ for i in range(1, simulation_duration*60):
     # substantial loss happen terminate the program
     if i % 60 == 0:
         portfolioSummary = trader.getPortfolioSummary()
-        if portfolioSummary.getTotalRealizedPL() < -3000.00 \
+        if portfolioSummary.getTotalRealizedPL() < -1000.00 \
                 or portfolioSummary.getTotalBP() < 600000:
             break
         # Time to stop the simulation.

@@ -38,7 +38,6 @@ def upDateOrder(trader, signal, ticker):
 
             elif signal < 0:
                  setupSellOrder(trader, ticker, signal)
-
     # If there is a sell or buy order pending, check the signal.
     elif len(Order) == 1:
         if signal > 0:
@@ -70,6 +69,20 @@ def upDateOrder(trader, signal, ticker):
         for order in Order:
             trader.submitCancellation(order)
 
+    # patch
+    item = trader.getPortfolioItem(ticker)
+    if item.getShares() >= 300:
+        closeOrder = shift.Order(shift.Order.MARKET_SELL, ticker, int(item.getShares() / 100))
+        trader.submitOrder(closeOrder)
+        while (item.getShares() != 0):
+            time.sleep(0.1)
+    elif item.getShares() <= -300:
+        closeOrder = shift.Order(shift.Order.MARKET_BUY, ticker, int(-item.getShares() / 100))
+        trader.submitOrder(closeOrder)
+        while (item.getShares() != 0):
+            time.sleep(0.1)
+
+
 
 # could modify this function as multi-threading market makers
 def marketMaker(maker, trader, stockList, tickers, lookBack, lag,
@@ -91,7 +104,7 @@ def marketMaker(maker, trader, stockList, tickers, lookBack, lag,
 
         else:
             signal = 0
-        print(signal)
+        print(signal, end = "**")
         upDateOrder(trader, signal, ticker = ticker)
 
 
@@ -158,10 +171,29 @@ def signalGenerator2(stockList, ticker, lookBack , lag, decay):
             jump = (data["lastPrice"][i + lag] - data["lastPrice"][i])/data["lastPrice"][i]
         else:
             jump = 0
-        if jump > delta_high:
-            yTrain.append(1)
-        elif jump < delta_low:
+
+        if jump > delta_low and jump < delta_high:
+            yTrain.append(0)
+        elif jump > 2*delta_low and jump < delta_low:
             yTrain.append(-1)
+        elif jump > delta_high and jump < 2*delta_high:
+            yTrain.append(1)
+        elif jump < 2*delta_low and jump > 3*delta_low:
+            yTrain.append(-2)
+        elif jump > 2*delta_high and jump < 3*delta_high:
+            yTrain.append(2)
+        elif jump < 3*delta_low and jump > 4*delta_low:
+            yTrain.append(-3)
+        elif jump > 3*delta_high and jump < 4*delta_high:
+            yTrain.append(3)
+        elif jump < 4*delta_low and jump > 5*delta_low:
+            yTrain.append(-4)
+        elif jump > 4*delta_high and jump < 5*delta_high:
+            yTrain.append(4)
+        elif jump < 5*delta_low:
+            yTrain.append(-5)
+        elif jump > 5*delta_high:
+            yTrain.append(5)
         else:
             yTrain.append(0)
 
