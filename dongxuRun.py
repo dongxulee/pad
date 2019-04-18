@@ -74,13 +74,11 @@ def upDateOrder(trader, signal, ticker):
     if item.getShares() >= 300:
         closeOrder = shift.Order(shift.Order.MARKET_SELL, ticker, int(item.getShares() / 100))
         trader.submitOrder(closeOrder)
-        while (item.getShares() != 0):
-            time.sleep(0.1)
+
     elif item.getShares() <= -300:
         closeOrder = shift.Order(shift.Order.MARKET_BUY, ticker, int(-item.getShares() / 100))
         trader.submitOrder(closeOrder)
-        while (item.getShares() != 0):
-            time.sleep(0.1)
+
 
 
 
