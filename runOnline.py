@@ -28,7 +28,7 @@ trader.subAllOrderBook()
 simulation_duration = 380
 
 # Time to stop the simulation
-timeToStop = datetime.time(10, 00)
+timeToStop = datetime.time(15, 50)
 # All companies' ticker in Dow Jones
 tickers = trader.getStockList()
 # DWDP and WBA will not be available for trading
@@ -79,7 +79,7 @@ for i in range(1, simulation_duration*60):
     Risk Control and time management 
     '''
     # substantial loss happen terminate the program
-    if i % 30 == 0:
+    if i % 60 == 0:
         portfolioSummary = trader.getPortfolioSummary()
         if portfolioSummary.getTotalRealizedPL() < -1000.00 \
                 or portfolioSummary.getTotalBP() < 600000:
@@ -97,7 +97,7 @@ orders
 cancelAllPendingOrders(trader)
 # clear all the portfolio items with market sell
 clearAllPortfolioItems(trader, tickers)
-time.sleep(600)
+time.sleep(200)
 # Print out the portfolio summary
 print("portfolio summary-----------------------------------------------------")
 portfolioInfo(trader)

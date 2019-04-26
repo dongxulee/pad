@@ -188,10 +188,34 @@ def signalGenerator2(stockList, ticker, lookBack , lag, decay):
             yTrain.append(-4)
         elif jump > 4*delta_high and jump < 5*delta_high:
             yTrain.append(4)
-        elif jump < 5*delta_low:
+        elif jump < 5 * delta_low and jump > 6 * delta_low:
             yTrain.append(-5)
-        elif jump > 5*delta_high:
+        elif jump > 5 * delta_high and jump < 6 * delta_high:
             yTrain.append(5)
+        elif jump < 6 * delta_low and jump > 7 * delta_low:
+            yTrain.append(-6)
+        elif jump > 6 * delta_high and jump < 7 * delta_high:
+            yTrain.append(6)
+        elif jump < 7 * delta_low and jump > 8 * delta_low:
+            yTrain.append(-10)
+        elif jump > 7 * delta_high and jump < 8 * delta_high:
+            yTrain.append(10)
+        elif jump < 8 * delta_low and jump > 9 * delta_low:
+            yTrain.append(-15)
+        elif jump > 8 * delta_high and jump < 9 * delta_high:
+            yTrain.append(15)
+        elif jump < 9 * delta_low and jump > 10 * delta_low:
+            yTrain.append(-20)
+        elif jump > 9 * delta_high and jump < 10 * delta_high:
+            yTrain.append(20)
+        elif jump < 10 * delta_low and jump > 11 * delta_low:
+            yTrain.append(-25)
+        elif jump > 10 * delta_high and jump < 11 * delta_high:
+            yTrain.append(25)
+        elif jump < 11 * delta_low:
+            yTrain.append(-30)
+        elif jump > 11 * delta_high:
+            yTrain.append(30)
         else:
             yTrain.append(0)
 
