@@ -170,52 +170,60 @@ def signalGenerator2(stockList, ticker, lookBack , lag, decay):
         else:
             jump = 0
 
-        if jump > delta_low and jump < delta_high:
+        if jump >= delta_low and jump <= delta_high:
             yTrain.append(0)
-        elif jump > 2*delta_low and jump < delta_low:
-            yTrain.append(-1)
-        elif jump > delta_high and jump < 2*delta_high:
+        elif jump>delta_high and jump <= 3*delta_high:
             yTrain.append(1)
-        elif jump < 2*delta_low and jump > 3*delta_low:
-            yTrain.append(-2)
-        elif jump > 2*delta_high and jump < 3*delta_high:
-            yTrain.append(2)
-        elif jump < 3*delta_low and jump > 4*delta_low:
-            yTrain.append(-3)
-        elif jump > 3*delta_high and jump < 4*delta_high:
-            yTrain.append(3)
-        elif jump < 4*delta_low and jump > 5*delta_low:
-            yTrain.append(-4)
-        elif jump > 4*delta_high and jump < 5*delta_high:
-            yTrain.append(4)
-        elif jump < 5 * delta_low and jump > 6 * delta_low:
-            yTrain.append(-5)
-        elif jump > 5 * delta_high and jump < 6 * delta_high:
+        elif jump>= 3*delta_low and jump< delta_low:
+            yTrain.append(-1)
+        elif jump >3*delta_high:
             yTrain.append(5)
-        elif jump < 6 * delta_low and jump > 7 * delta_low:
-            yTrain.append(-6)
-        elif jump > 6 * delta_high and jump < 7 * delta_high:
-            yTrain.append(6)
-        elif jump < 7 * delta_low and jump > 8 * delta_low:
-            yTrain.append(-10)
-        elif jump > 7 * delta_high and jump < 8 * delta_high:
-            yTrain.append(10)
-        elif jump < 8 * delta_low and jump > 9 * delta_low:
-            yTrain.append(-15)
-        elif jump > 8 * delta_high and jump < 9 * delta_high:
-            yTrain.append(15)
-        elif jump < 9 * delta_low and jump > 10 * delta_low:
-            yTrain.append(-20)
-        elif jump > 9 * delta_high and jump < 10 * delta_high:
-            yTrain.append(20)
-        elif jump < 10 * delta_low and jump > 11 * delta_low:
-            yTrain.append(-25)
-        elif jump > 10 * delta_high and jump < 11 * delta_high:
-            yTrain.append(25)
-        elif jump < 11 * delta_low:
-            yTrain.append(-30)
-        elif jump > 11 * delta_high:
-            yTrain.append(30)
+        elif jump < 3*delta_low:
+            yTrain.append(-5)
+        # elif jump > 2*delta_low and jump < delta_low:
+        #     yTrain.append(-1)
+        # elif jump > delta_high and jump < 2*delta_high:
+        #     yTrain.append(1)
+        # elif jump < 2*delta_low and jump > 3*delta_low:
+        #     yTrain.append(-2)
+        # elif jump > 2*delta_high and jump < 3*delta_high:
+        #     yTrain.append(2)
+        # elif jump < 3*delta_low and jump > 4*delta_low:
+        #     yTrain.append(-3)
+        # elif jump > 3*delta_high and jump < 4*delta_high:
+        #     yTrain.append(3)
+        # elif jump < 4*delta_low and jump > 5*delta_low:
+        #     yTrain.append(-4)
+        # elif jump > 4*delta_high and jump < 5*delta_high:
+        #     yTrain.append(4)
+        # elif jump < 5 * delta_low and jump > 6 * delta_low:
+        #     yTrain.append(-5)
+        # elif jump > 5 * delta_high and jump < 6 * delta_high:
+        #     yTrain.append(5)
+        # elif jump < 6 * delta_low and jump > 7 * delta_low:
+        #     yTrain.append(-6)
+        # elif jump > 6 * delta_high and jump < 7 * delta_high:
+        #     yTrain.append(6)
+        # elif jump < 7 * delta_low and jump > 8 * delta_low:
+        #     yTrain.append(-10)
+        # elif jump > 7 * delta_high and jump < 8 * delta_high:
+        #     yTrain.append(10)
+        # elif jump < 8 * delta_low and jump > 9 * delta_low:
+        #     yTrain.append(-15)
+        # elif jump > 8 * delta_high and jump < 9 * delta_high:
+        #     yTrain.append(15)
+        # elif jump < 9 * delta_low and jump > 10 * delta_low:
+        #     yTrain.append(-20)
+        # elif jump > 9 * delta_high and jump < 10 * delta_high:
+        #     yTrain.append(20)
+        # elif jump < 10 * delta_low and jump > 11 * delta_low:
+        #     yTrain.append(-25)
+        # elif jump > 10 * delta_high and jump < 11 * delta_high:
+        #     yTrain.append(25)
+        # elif jump < 11 * delta_low:
+        #     yTrain.append(-30)
+        # elif jump > 11 * delta_high:
+        #     yTrain.append(30)
         else:
             yTrain.append(0)
 

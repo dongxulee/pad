@@ -28,7 +28,7 @@ trader.subAllOrderBook()
 simulation_duration = 380
 
 # Time to stop the simulation
-timeToStop = datetime.time(10, 00)
+timeToStop = datetime.time(15, 30)
 # All companies' ticker in Dow Jones
 tickers = trader.getStockList()
 # DWDP and WBA will not be available for trading
@@ -70,7 +70,7 @@ for i in range(1, simulation_duration*60):
     dongxuTimeInterval = 1
     if i > dongxuStartTime and i % dongxuTimeInterval == 0:
         marketMaker(2, trader, stockList, tickers, lookBack = 301,
-                                    lag = 1,
+                                    lag = 3,
                                     numNeighbors = 10, decay = 1)
 
 
